@@ -1,0 +1,20 @@
+[package]
+name = "note"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dirs = "5.0"
+
+[profile.release]
+opt-level = "z"              # “maximal” optimization for speed
+debug = false              # strip inlined debug info
+lto = true                 # link-time optimization
+codegen-units = 1          # single codegen unit for better inlining at the cost of compile time
+panic = "abort"            # no unwinding overhead
+overflow-checks = false    # skip integer overflow checks
