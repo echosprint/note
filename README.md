@@ -50,12 +50,20 @@ This displays all notes sorted by timestamp (newest first) with:
 
 ### Remove a Note
 ```bash
-note remove <note-id>
+note rm <note-id>
 ```
 
-Example:
+Examples:
 ```bash
-note remove a1b2
+# Remove with full ID
+note rm a1b2
+
+# Remove with partial ID (as long as it's unique)
+note rm a1     # Works if only one note starts with "a1"
+note rm a1b    # More specific partial ID
+
+# If partial ID matches multiple notes, you'll see all matches
+note rm a      # Shows all notes starting with "a" if ambiguous
 ```
 
 ## Storage
