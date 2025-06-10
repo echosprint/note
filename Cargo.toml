@@ -1,6 +1,6 @@
 [package]
 name = "note"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2024"
 
 [dependencies]
@@ -10,9 +10,10 @@ anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dirs = "5.0"
+colored = "2.0"
 
 [profile.release]
-opt-level = "z"              # “maximal” optimization for speed
+opt-level = "z"              # "maximal" optimization for speed
 debug = false              # strip inlined debug info
 lto = true                 # link-time optimization
 codegen-units = 1          # single codegen unit for better inlining at the cost of compile time

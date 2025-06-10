@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
 use clap::{Parser, Subcommand};
+use colored::*;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
@@ -155,13 +156,13 @@ impl NoteManager {
             
             // Add subtle visual separator between notes
             if index > 0 {
-                println!("\x1b[90m  ────────────────────────────────────\x1b[0m");
+                println!("  {}", "────────────────────────────────────".bright_black());
             }
             
             // Color-coded output with better spacing
-            println!("  \x1b[36m{}\x1b[0m \x1b[33m{}\x1b[0m", 
-                format!("{:>6}", formatted_time),
-                format!("[{}]", note.id)
+            println!("  {} {}", 
+                format!("{:>6}", formatted_time).cyan(),
+                format!("[{}]", note.id).yellow()
             );
             println!("  {}", note.content);
         }
@@ -170,7 +171,10 @@ impl NoteManager {
     
     fn list_notes(&self) {
         if self.notes.is_empty() {
-            println!("\x1b[90m✨ No notes yet. Create your first note with: \x1b[96mnote <your text>\x1b[0m");
+            println!("{} No notes yet. Create your first note with: {}", 
+                "✨".bright_black(), 
+                "note <your text>".bright_cyan()
+            );
             return;
         }
         
@@ -180,8 +184,6 @@ impl NoteManager {
         
         self.display_notes(&sorted_notes);
     }
-    
-
     
     fn remove_note_by_id(&mut self, id: &str) -> Result<RemoveResult> {
         // Find all notes that start with the given partial ID
@@ -215,20 +217,29 @@ fn main() -> Result<()> {
         Some(Commands::Remove { id }) => {
             match note_manager.remove_note_by_id(id)? {
                 RemoveResult::Removed(note_id) => {
-                    println!("\x1b[92m✓\x1b[0m Note \x1b[33m[{}]\x1b[0m removed", note_id);
+                    println!("{} Note {} removed", 
+                        "✓".green(), 
+                        format!("[{}]", note_id).yellow()
+                    );
                 }
                 RemoveResult::NotFound => {
-                    println!("\x1b[91m✗\x1b[0m No notes found matching \x1b[33m[{}]\x1b[0m", id);
+                    println!("{} No notes found matching {}", 
+                        "✗".red(), 
+                        format!("[{}]", id).yellow()
+                    );
                 }
                 RemoveResult::Ambiguous(matching_ids) => {
-                    println!("\x1b[93m⚠\x1b[0m Multiple notes match \x1b[33m[{}]\x1b[0m:", id);
+                    println!("{} Multiple notes match {}:", 
+                        "⚠".yellow(), 
+                        format!("[{}]", id).yellow()
+                    );
                     println!("  Please be more specific. Matching notes:");
                     for matching_id in matching_ids {
                         if let Some(note) = note_manager.notes.iter().find(|n| n.id == matching_id) {
                             let formatted_time = note.timestamp.format("%b %d");
-                            println!("    \x1b[36m{}\x1b[0m \x1b[33m[{}]\x1b[0m {}", 
-                                format!("{:>6}", formatted_time),
-                                note.id,
+                            println!("    {} {} {}", 
+                                format!("{:>6}", formatted_time).cyan(),
+                                format!("[{}]", note.id).yellow(),
                                 note.content.chars().take(50).collect::<String>()
                                     + if note.content.len() > 50 { "..." } else { "" }
                             );
@@ -242,7 +253,10 @@ fn main() -> Result<()> {
                 // Join all text arguments with spaces to form the note content
                 let text = cli.text.join(" ");
                 let note_id = note_manager.add_note(text)?;
-                println!("\x1b[92m✓\x1b[0m Note saved \x1b[33m[{}]\x1b[0m", note_id);
+                println!("{} Note saved {}", 
+                    "✓".green(), 
+                    format!("[{}]", note_id).yellow()
+                );
             } else {
                 // List all notes
                 note_manager.list_notes();
