@@ -6,7 +6,7 @@ default: linux
 .PHONY: linux
 linux:
 	@echo "Building for ubuntu(linux) (default)"
-	cargo build --release 
+	cargo build --release --target=x86_64-unknown-linux-gnu 
 
 # Build for Windows x86_64 explicitly
 .PHONY: x86_64

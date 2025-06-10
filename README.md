@@ -28,7 +28,7 @@ A simple, fast, and lightweight command-line note-taking application written in 
    make x86_32     # For Windows x86_32
    make all        # Build for all platforms
    ```
-4. The binary will be available in `target/release/note`
+4. The binary will be available in `target/x86_64-unknown-linux-gnu/release/note` (Linux)
 
 ## Usage
 
