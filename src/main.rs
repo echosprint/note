@@ -20,7 +20,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Delete a note by ID
+    /// Remove a note by ID
     #[command(name = "rm")]
     Remove {
         /// Note ID to delete
