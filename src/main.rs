@@ -10,6 +10,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(name = "note")]
 #[command(about = "A simple command-line note-taking application")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
