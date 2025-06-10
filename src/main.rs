@@ -28,6 +28,13 @@ enum Commands {
     },
 }
 
+#[derive(Debug)]
+enum RemoveResult {
+    Removed(String),
+    NotFound,
+    Ambiguous(Vec<String>),
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 struct Note {
     id: String,
@@ -157,13 +164,26 @@ impl NoteManager {
     
 
     
-    fn remove_note_by_id(&mut self, id: &str) -> Result<bool> {
-        if self.notes.iter().any(|note| note.id == id) {
-            self.notes.retain(|note| note.id != id);
-            self.save_notes()?;
-            Ok(true)
-        } else {
-            Ok(false)
+    fn remove_note_by_id(&mut self, id: &str) -> Result<RemoveResult> {
+        // Find all notes that start with the given partial ID
+        let matching_notes: Vec<&Note> = self.notes.iter()
+            .filter(|note| note.id.starts_with(id))
+            .collect();
+        
+        match matching_notes.len() {
+            0 => Ok(RemoveResult::NotFound),
+            1 => {
+                let note_id = matching_notes[0].id.clone();
+                self.notes.retain(|note| note.id != note_id);
+                self.save_notes()?;
+                Ok(RemoveResult::Removed(note_id))
+            }
+            _ => {
+                let ambiguous_ids: Vec<String> = matching_notes.iter()
+                    .map(|note| note.id.clone())
+                    .collect();
+                Ok(RemoveResult::Ambiguous(ambiguous_ids))
+            }
         }
     }
 }
@@ -174,10 +194,28 @@ fn main() -> Result<()> {
     
     match &cli.command {
         Some(Commands::Remove { id }) => {
-            if note_manager.remove_note_by_id(id)? {
-                println!("\x1b[92m✓\x1b[0m Note \x1b[33m[{}]\x1b[0m removed", id);
-            } else {
-                println!("\x1b[91m✗\x1b[0m Note \x1b[33m[{}]\x1b[0m not found", id);
+            match note_manager.remove_note_by_id(id)? {
+                RemoveResult::Removed(note_id) => {
+                    println!("\x1b[92m✓\x1b[0m Note \x1b[33m[{}]\x1b[0m removed", note_id);
+                }
+                RemoveResult::NotFound => {
+                    println!("\x1b[91m✗\x1b[0m No notes found matching \x1b[33m[{}]\x1b[0m", id);
+                }
+                RemoveResult::Ambiguous(matching_ids) => {
+                    println!("\x1b[93m⚠\x1b[0m Multiple notes match \x1b[33m[{}]\x1b[0m:", id);
+                    println!("  Please be more specific. Matching notes:");
+                    for matching_id in matching_ids {
+                        if let Some(note) = note_manager.notes.iter().find(|n| n.id == matching_id) {
+                            let formatted_time = note.timestamp.format("%b %d");
+                            println!("    \x1b[36m{}\x1b[0m \x1b[33m[{}]\x1b[0m {}", 
+                                format!("{:>6}", formatted_time),
+                                note.id,
+                                note.content.chars().take(50).collect::<String>()
+                                    + if note.content.len() > 50 { "..." } else { "" }
+                            );
+                        }
+                    }
+                }
             }
         }
         None => {
