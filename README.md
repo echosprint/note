@@ -7,7 +7,7 @@ A simple, fast, and lightweight command-line note-taking application written in 
 - **Quick note creation**: Add notes instantly from the command line
 - **Persistent storage**: Notes are saved in JSON format in your home directory
 - **Note listing**: View all notes with timestamps and unique IDs
-- **Note deletion**: Remove notes using their unique ID
+- **Note removal**: Remove notes using their unique ID
 - **Beautiful output**: Color-coded display with clean formatting
 - **Cross-platform**: Build for Linux, Windows (x86_64 and x86_32)
 
@@ -48,14 +48,14 @@ This displays all notes sorted by timestamp (newest first) with:
 - Unique 4-character ID in brackets
 - Note content
 
-### Delete a Note
+### Remove a Note
 ```bash
-note delete <note-id>
+note remove <note-id>
 ```
 
 Example:
 ```bash
-note delete a1b2
+note remove a1b2
 ```
 
 ## Storage

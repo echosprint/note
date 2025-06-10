@@ -21,7 +21,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Delete a note by ID
-    Delete {
+    Remove {
         /// Note ID to delete
         id: String,
     },
@@ -156,7 +156,7 @@ impl NoteManager {
     
 
     
-    fn delete_note_by_id(&mut self, id: &str) -> Result<bool> {
+    fn remove_note_by_id(&mut self, id: &str) -> Result<bool> {
         if self.notes.iter().any(|note| note.id == id) {
             self.notes.retain(|note| note.id != id);
             self.save_notes()?;
@@ -172,9 +172,9 @@ fn main() -> Result<()> {
     let mut note_manager = NoteManager::new()?;
     
     match &cli.command {
-        Some(Commands::Delete { id }) => {
-            if note_manager.delete_note_by_id(id)? {
-                println!("\x1b[92m✓\x1b[0m Note \x1b[33m[{}]\x1b[0m deleted", id);
+        Some(Commands::Remove { id }) => {
+            if note_manager.remove_note_by_id(id)? {
+                println!("\x1b[92m✓\x1b[0m Note \x1b[33m[{}]\x1b[0m removed", id);
             } else {
                 println!("\x1b[91m✗\x1b[0m Note \x1b[33m[{}]\x1b[0m not found", id);
             }
