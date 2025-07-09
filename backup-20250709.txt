@@ -1,0 +1,41 @@
+#ghi3 2025-12-05T00:00:00+08:00
+Note with zero-padded slash date
+
+#def2 2025-07-31T00:00:00+08:00
+Note with dash date format
+
+#25f6 2025-07-09T09:37:16.167565536+08:00
+This is a test note with multiple lines
+Line 2 of the note
+Line 3 with more content
+
+#6f7e 2025-07-09T09:18:31.724670130+08:00
+Test note with current timestamp
+
+#mno5 2025-07-09T09:08:04.301479827+08:00
+Note with full timestamp
+
+#abc1 2025-03-21T00:00:00+08:00
+Note with slash date format
+
+#jkl4 2025-01-15T00:00:00+08:00
+Note with zero-padded dash date
+
+#new1 2025-01-06T14:00:00+08:00
+This should keep its original ID
+
+#6627 2025-01-05T12:00:00+08:00
+This should get a new ID due to conflict
+
+#xyz3 2025-01-03T09:15:00+08:00
+\# This note starts with hash
+Regular content after
+
+#xyz2 2025-01-02T15:30:00+08:00
+Second imported note
+With multiple lines
+And more content here
+
+#xyz1 2025-01-01T10:00:00+08:00
+First imported note
+This is the content of the first note
