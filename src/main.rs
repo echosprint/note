@@ -8,10 +8,18 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 
+fn get_storage_help() -> String {
+    let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("~"));
+    let storage_path = home_dir.join(".local").join("share").join("note").join("notes.txt");
+    
+    format!("STORAGE:\n  Notes are stored in: {}", storage_path.display())
+}
+
 #[derive(Parser)]
 #[command(name = "note")]
 #[command(about = "A simple command-line note-taking application")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
+#[command(after_help = get_storage_help())]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -123,20 +131,124 @@ impl NoteManager {
             return Ok(());
         }
         
-        self.notes = serde_json::from_str(&content)
+        self.notes = self.parse_notes_from_text(&content)
             .context("Failed to parse notes file")?;
         
         Ok(())
     }
     
+    fn parse_notes_from_text(&self, content: &str) -> Result<Vec<Note>> {
+        let mut notes = Vec::new();
+        let lines: Vec<&str> = content.lines().collect();
+        let mut i = 0;
+        
+        while i < lines.len() {
+            let line = lines[i].trim();
+            
+            // Skip empty lines
+            if line.is_empty() {
+                i += 1;
+                continue;
+            }
+            
+            // Look for lines starting with #
+            if line.starts_with('#') {
+                // Parse the header line: #id date
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 2 {
+                    let id = parts[0][1..].to_string(); // Remove the # prefix
+                    let date_str = parts[1..].join(" ");
+                    
+                    // Parse the timestamp
+                    let timestamp = chrono::DateTime::parse_from_rfc3339(&date_str)
+                        .or_else(|_| chrono::DateTime::parse_from_str(&date_str, "%Y-%m-%d %H:%M:%S %z"))
+                        .or_else(|_| chrono::DateTime::parse_from_str(&date_str, "%Y-%m-%d %H:%M:%S"))
+                        .map(|dt| dt.with_timezone(&Local))
+                        .unwrap_or_else(|_| Local::now());
+                    
+                    // Collect content lines until next note or end of file
+                    let mut content_lines = Vec::new();
+                    i += 1;
+                    
+                    while i < lines.len() {
+                        let content_line = lines[i];
+                        if content_line.trim().starts_with('#') && !content_line.trim_start().starts_with("\\#") {
+                            break;
+                        }
+                        content_lines.push(content_line);
+                        i += 1;
+                    }
+                    
+                    let content = self.unescape_content(&content_lines.join("\n")).trim().to_string();
+                    if !content.is_empty() {
+                        notes.push(Note {
+                            id,
+                            content,
+                            timestamp,
+                        });
+                    }
+                } else {
+                    i += 1;
+                }
+            } else {
+                i += 1;
+            }
+        }
+        
+        Ok(notes)
+    }
+    
     fn save_notes(&self) -> Result<()> {
-        let content = serde_json::to_string_pretty(&self.notes)
-            .context("Failed to serialize notes")?;
+        let mut content = String::new();
+        
+        // Sort notes by timestamp (newest first) for consistent output
+        let mut sorted_notes = self.notes.clone();
+        sorted_notes.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        
+        for (index, note) in sorted_notes.iter().enumerate() {
+            if index > 0 {
+                content.push('\n');
+            }
+            
+            // Write header line: #id timestamp
+            content.push_str(&format!("#{} {}\n", note.id, note.timestamp.to_rfc3339()));
+            
+            // Write note content, escaping lines that start with #
+            let escaped_content = self.escape_content(&note.content);
+            content.push_str(&escaped_content);
+            content.push('\n');
+        }
         
         fs::write(&self.notes_file, content)
             .context("Failed to write notes file")?;
         
         Ok(())
+    }
+    
+    fn escape_content(&self, content: &str) -> String {
+        content.lines()
+            .map(|line| {
+                if line.trim_start().starts_with('#') {
+                    format!("\\{}", line)
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+    
+    fn unescape_content(&self, content: &str) -> String {
+        content.lines()
+            .map(|line| {
+                if line.trim_start().starts_with("\\#") {
+                    &line[line.find("\\#").unwrap() + 1..]
+                } else {
+                    line
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
     
     fn add_note(&mut self, content: String) -> Result<String> {
@@ -164,7 +276,11 @@ impl NoteManager {
                 format!("{:>6}", formatted_time).cyan(),
                 format!("[{}]", note.id).yellow()
             );
-            println!("  {}", note.content);
+            
+            // Display content with proper indentation for multiline notes
+            for line in note.content.lines() {
+                println!("  {}", line);
+            }
         }
         println!();
     }
